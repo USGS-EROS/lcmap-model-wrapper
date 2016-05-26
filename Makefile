@@ -7,8 +7,6 @@ LD_LIBRARY_PATH?=$(CURDIR)/$(LIB)
 export LD_LIBRARY_PATH
 
 
-all: ccdc index mylib
-
 ccdc:
 	gcc -std=c99 -g -shared -fpic $(SRC)/ccdc.c $(PYTHON) $(NUMPY) -o $(LIB)/ccdc.so
 	gcc -std=c99 -o $(BIN)/ccdc $(LIB)/ccdc.so
@@ -20,6 +18,8 @@ index:
 mylib:
 	gcc -std=c99 -g -shared -fpic $(SRC)/mylib.c -o $(LIB)/mylib.so
 	gcc -std=c99 -o $(BIN)/mylib $(LIB)/mylib.so
+
+build: ccdc index mylib
 
 run: ccdc
 	$(BIN)/ccdc
