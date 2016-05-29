@@ -1,7 +1,9 @@
 import click
 import json
-import index
 import numpy as np
+from time import gmtime, strftime
+
+from index import ndvi, vndvi
 from lcmap.client import Client
 
 # Example Usage:
@@ -13,13 +15,17 @@ from lcmap.client import Client
 # ```
 #
 
-def fetch(x, y, t1, t2):
+def load(x, y, t1, t2):
     c = Client()
     vis_ubid = "LANDSAT_8/OLI_TIRS/sr_band4"
     _, vis = c.data.tiles(vis_ubid, x, y, t1, t2)
     nir_ubid = "LANDSAT_8/OLI_TIRS/sr_band5"
     _, nir = c.data.tiles(nir_ubid, x, y, t1, t2)
     return vis, nir
+
+def save(results):
+    for result in results:
+        pass
 
 
 @click.group()
@@ -28,17 +34,19 @@ def cli():
 
 
 @click.command()
-@click.option('--x')
-@click.option('--y')
-@click.option('--t1')
-@click.option('--t2')
-def ndvi(x, y, t1, t2):
-    vs, ns = fetch(x, y, t1, t2)
+@click.option('--x', required=True)
+@click.option('--y', required=True)
+@click.option('--t1', required=True)
+@click.option('--t2', required=True)
+@click.option('--job-id', required=True)
+def ndvi(x, y, t1, t2, job_id):
+    vs, ns = load(x, y, t1, t2)
     results = []
     for (nir, vis) in zip(ns, vs):
-        data = np.array(index.vndvi(nir.data, vis.data))
+        data = np.array(vndvi(nir.data, vis.data))
         data = (data * 1000).astype(int)[0].tolist()
         results.append({
+            'job_id': job_id,
             'data': data,
             'source': {
                 'nir_x': nir.x,
@@ -52,8 +60,18 @@ def ndvi(x, y, t1, t2):
             }
         })
 
-    click.echo(json.dumps(results, indent=2))
-    return results
+    # The results are saved, not emitted to STDOUT.
+    # click.echo(json.dumps(results, indent=2))
+    save(results)
+
+    # Details about the job execution are emitted to STDOUT.
+    execution = {
+        'model': 'lcmap.ndvi',
+        'version': '0.5.0',
+        'job-id': job_id,
+        'completed': strftime("%Y-%m-%d %H:%M:%S", completed)
+    }
+    click.echo(json.dumps(execution, indent=2))
 
 
 cli.add_command(ndvi)
