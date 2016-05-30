@@ -1,10 +1,13 @@
 import click
 import json
 import numpy as np
-from time import gmtime, strftime
+import base64
+from datetime import datetime
 
 from index import ndvi, vndvi
 from lcmap.client import Client
+
+c = Client()
 
 # Example Usage:
 #
@@ -16,17 +19,24 @@ from lcmap.client import Client
 #
 
 def load(x, y, t1, t2):
-    c = Client()
     vis_ubid = "LANDSAT_8/OLI_TIRS/sr_band4"
     _, vis = c.data.tiles(vis_ubid, x, y, t1, t2)
     nir_ubid = "LANDSAT_8/OLI_TIRS/sr_band5"
     _, nir = c.data.tiles(nir_ubid, x, y, t1, t2)
     return vis, nir
 
-def save(results):
-    for result in results:
-        pass
+def save(tiles):
+    r = []
+    for tile in tiles:
+        r.append(c.data.save({'tile':tile}).result)
+    return r
 
+def encode(data):
+    return base64.b64encode(data.tobytes()).decode("utf-8")
+
+def iso8601(date_string):
+    time = datetime.strptime(date_string, "%a %b %d %H:%M:%S %Z %Y")
+    return time.isoformat()
 
 @click.group()
 def cli():
@@ -41,14 +51,18 @@ def cli():
 @click.option('--job-id', required=True)
 def ndvi(x, y, t1, t2, job_id):
     vs, ns = load(x, y, t1, t2)
-    results = []
+    tiles = []
     for (nir, vis) in zip(ns, vs):
         data = np.array(vndvi(nir.data, vis.data))
-        data = (data * 1000).astype(int)[0].tolist()
-        results.append({
-            'job_id': job_id,
-            'data': data,
-            'source': {
+        data = (data * 10000).astype(np.short)
+        tiles.append({
+            'ubid': "LCMAP/SEE/NDVI",
+            'x': nir.x,
+            'y': nir.y,
+            'acquired': iso8601(nir.acquired),
+            'data': encode(data),
+            'source': json.dumps({
+                'job_id': job_id,
                 'nir_x': nir.x,
                 'nir_y': nir.y,
                 'nir_ubid': nir.ubid,
@@ -57,19 +71,19 @@ def ndvi(x, y, t1, t2, job_id):
                 'vis_y': vis.y,
                 'vis_ubid': vis.ubid,
                 'vis_acquired': vis.acquired
-            }
+            })
         })
 
     # The results are saved, not emitted to STDOUT.
     # click.echo(json.dumps(results, indent=2))
-    save(results)
+    saved = save(tiles)
 
     # Details about the job execution are emitted to STDOUT.
     execution = {
         'model': 'lcmap.ndvi',
         'version': '0.5.0',
         'job-id': job_id,
-        'completed': strftime("%Y-%m-%d %H:%M:%S", completed)
+        'saved': saved
     }
     click.echo(json.dumps(execution, indent=2))
 
