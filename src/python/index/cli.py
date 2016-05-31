@@ -35,7 +35,8 @@ def encode(data):
     return base64.b64encode(data.tobytes()).decode("utf-8")
 
 def iso8601(date_string):
-    time = datetime.strptime(date_string, "%a %b %d %H:%M:%S %Z %Y")
+    fmt = "%Y-%m-%dT%H:%M:%SZ"
+    time = datetime.strptime(date_string, fmt)
     return time.isoformat()
 
 @click.group()
