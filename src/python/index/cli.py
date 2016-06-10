@@ -19,9 +19,9 @@ c = Client()
 #
 
 def load(x, y, t1, t2):
-    vis_ubid = "LANDSAT_8/OLI_TIRS/sr_band4"
+    vis_ubid = "LANDSAT_7/ETM/sr_band3"
     _, vis = c.data.tiles(vis_ubid, x, y, t1, t2)
-    nir_ubid = "LANDSAT_8/OLI_TIRS/sr_band5"
+    nir_ubid = "LANDSAT_7/ETM/sr_band4"
     _, nir = c.data.tiles(nir_ubid, x, y, t1, t2)
     return vis, nir
 
