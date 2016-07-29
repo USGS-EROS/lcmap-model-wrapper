@@ -16,6 +16,6 @@ COPY    science /home/science
 WORKDIR /home/science/src/python
 ENV     LD_LIBRARY_PATH /home/science/lib
 
-CMD ["/usr/bin/python3" "index/cli.py" "ndvi"]
+CMD ["/usr/bin/python3", "index/cli.py", "ndvi"]
 
-# ENTRYPOINT /bin/bash
+# ENTRYPOINT ["/usr/bin/python3", "index/cli.py", "ndvi"]
