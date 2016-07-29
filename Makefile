@@ -31,8 +31,8 @@ clean:
 	rm $(LIB)/*
 	rm $(BIN)/*
 
-test: ccdc
-	python src/python/wrapper.py
+test: build
+	python src/python/test.py
 
 notebook: build
 	jupyter notebook --notebook-dir="src/python" --no-browser
@@ -46,37 +46,17 @@ docker: FORCE
 	cp -rf ./bin ./docker/lcmap-model-wrapper/science
 	cp -rf ./lib ./docker/lcmap-model-wrapper/science
 	cp -rf ./src ./docker/lcmap-model-wrapper/science
-	cp -rf ~/.usgs ./docker/lcmap-model-wrapper/science
+	cp -rf ./config ./docker/lcmap-model-wrapper/science/.usgs
 	docker build -t "usgseros/lcmap-model-wrapper" docker/lcmap-model-wrapper
 	rm -rf ./docker/lcmap-model-wrapper/science
 
-CONTAINER_IDS=$(shell docker ps --no-trunc --all --quiet)
 docker-cleanup:
-	@echo $(CONTAINER_IDS)
-	docker rm $(IDS)
+	docker rm $(shell docker ps --no-trunc --all --quiet)
 
 docker-bash: docker
 	@docker run \
 	-e LD_LIBRARY_PATH=/home/science/lib \
         -it usgseros/lcmap-model-wrapper \
 	/bin/bash
-
-docker-ccdc: docker
-	@docker run \
-	-e LD_LIBRARY_PATH=/home/science/lib \
-        -it usgseros/lcmap-model-wrapper \
-	/root/bin/ccdc
-
-docker-ndvi: docker
-	@docker run \
-	-e LD_LIBRARY_PATH=/home/science/lib \
-        usgseros/lcmap-model-wrapper \
-	'--x "-1909498" --y "2978512" --t1 "2013-01-01" --t2 "2014-01-01" --job-id TBD'
-
-docker-ndvi-py: docker
-	@docker run \
-	-e LD_LIBRARY_PATH=/home/science/lib \
-	-it usgseros/lcmap-model-wrapper
-	python /root/src/python/wrapper.py
 
 FORCE:
