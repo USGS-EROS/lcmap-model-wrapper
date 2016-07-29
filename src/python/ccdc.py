@@ -2,7 +2,7 @@
 """
 
 import ctypes
-mylib = ctypes.CDLL("ccdc.so")
+ccdc = ctypes.CDLL("ccdc.so")
 
 
 class Result(ctypes.Structure):
@@ -39,7 +39,7 @@ def initialize(rs, gs, bs, ms, ts):
 
     # an instance of Result required when making pointers...
     results = ctypes.pointer(ctypes.pointer(Result()))
-    mylib.init(ra, ga, ba, ta, ma, count, results)
+    ccdc.init(ra, ga, ba, ta, ma, count, results)
 
     # We use the result count to cast the result reference...
     count_val = count.contents.value
