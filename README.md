@@ -12,6 +12,10 @@ It is arguably easier to handle IO using Python. Moreover, `lcmap-client-py` is 
 * Supporting a command-line interface to a Python wrapped C-library: `src/python/index/cli.py`
 * Building a docker image for a Python wrapped C-library: `docker/lcmap-model-wrapper/Dockerfile`
 
-## Important Note
+## Using a Docker Container
 
-These examples assume that the LCMAP REST Python Client can connect to an instance of the LCMAP system. Without it, you will not be able to retrieve data.
+These examples provide a way to build a docker image that wraps an example model. The container uses the LCMAP REST Python Client to retrieve data and store data, and as such, it requires a URL that can be resolved from the container.
+
+It is important to update the `lcmap.client` section of *this project's* `config/lcmap.ini` file (used to build a docker image) to refer to the IP address of the REST API. This should match the IP address specfied in the `lcmap.rest` section of `~/.usgs/lcmap.ini` **localhost will not work**
+
+After you update `config/lcmap.ini` you can use `make docker` to build the image expected by `lcmap-rest`.
